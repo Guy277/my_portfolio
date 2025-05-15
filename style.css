@@ -1,0 +1,704 @@
+
+/*body {
+    font-family: 'Poppins', sans-serif;
+}
+.fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeIn 0.5s ease forwards;
+}
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.slide-in-left {
+    opacity: 0;
+    transform: translateX(-50px);
+    animation: slideInLeft 0.5s ease forwards;
+}
+.slide-in-right {
+    opacity: 0;
+    transform: translateX(50px);
+    animation: slideInRight 0.5s ease forwards;
+}
+@keyframes slideInLeft {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+@keyframes slideInRight {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+[data-theme="dark"] {
+    background-color: #111827;
+    color: #f3f4f6;
+}
+[data-theme="dark"] .bg-white {
+    background-color: #1f2937;
+}
+[data-theme="dark"] .border-gray-200 {
+    border-color: #374151;
+}
+[data-theme="dark"] .text-gray-600 {
+    color: #9ca3af;
+}
+[data-theme="dark"] .bg-gray-50 {
+    background-color: #1f2937;
+}
+[data-theme="dark"] .bg-gray-100 {
+    background-color: #374151;
+}
+.progress-bar {
+    transition: width 1s ease-in-out;
+}
+.nav-link {
+    position: relative;
+}
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: #2563eb;
+    transition: width 0.3s ease;
+}
+.nav-link:hover::after {
+    width: 100%;
+}
+.theme-toggle, .mobile-menu-button {
+    transition: transform 0.3s ease;
+}
+.theme-toggle:hover, .mobile-menu-button:hover {
+    transform: scale(1.1);
+}
+.card-hover {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+.btn {
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+.btn:hover {
+    transform: translateY(-2px);
+}
+*/
+
+
+
+/* Police de base */
+body {
+    font-family: 'Poppins', sans-serif;
+    scroll-behavior: smooth; /* Défilement fluide pour les ancres */
+}
+
+/* Animation de fondu pour les éléments */
+.fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeIn 0.6s ease forwards;
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Animations de glissement pour les éléments de formation */
+.slide-in-left {
+    opacity: 0;
+    transform: translateX(-50px);
+    animation: slideInLeft 0.6s ease forwards;
+}
+
+.slide-in-right {
+    opacity: 0;
+    transform: translateX(50px);
+    animation: slideInRight 0.6s ease forwards;
+}
+
+@keyframes slideInLeft {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Effet de pulse pour les boutons CTA */
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Style du mode sombre */
+[data-theme="dark"] {
+    background-color: #0f172a; /* Fond plus sombre et élégant */
+    color: #e5e7eb;
+}
+
+[data-theme="dark"] .bg-white {
+    background-color: #1e293b; /* Gris foncé pour les cartes */
+}
+
+[data-theme="dark"] .border-gray-200 {
+    border-color: #475569; /* Bordure adaptée au mode sombre */
+}
+
+[data-theme="dark"] .text-gray-600 {
+    color: #94a3b8; /* Texte plus clair pour lisibilité */
+}
+
+[data-theme="dark"] .bg-gray-50 {
+    background-color: #1e293b;
+}
+
+[data-theme="dark"] .bg-gray-100 {
+    background-color: #334155;
+}
+
+/* Animation des barres de progression */
+.progress-bar {
+    transition: width 1.5s ease-in-out; /* Animation plus douce */
+    position: relative;
+    overflow: hidden;
+}
+
+/* Effet de chargement pour les barres de progression */
+.progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    animation: progressShine 2s infinite;
+}
+
+@keyframes progressShine {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* Style des cartes avec effet de verre en mode sombre */
+.card-hover {
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.card-hover:hover {
+    transform: translateY(-8px); /* Élévation plus marquée */
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .card-hover {
+    background: rgba(255, 255, 255, 0.05); /* Effet de verre */
+    backdrop-filter: blur(10px); /* Flou pour glassmorphism */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .card-hover:hover {
+    box-shadow: 0 12px 20px rgba(0, 0, 0, 0.3), 0 0 15px rgba(168, 85, 247, 0.3); /* Lueurs violettes */
+}
+
+/* Effet de parallaxe pour les images des projets */
+.project-card img {
+    transition: transform 0.5s ease;
+}
+
+.project-card:hover img {
+    transform: scale(1.05); /* Zoom subtil */
+}
+
+/* Style des boutons */
+.btn {
+    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.4s ease;
+}
+
+.btn:hover::before {
+    left: 100%; /* Effet de brillance au survol */
+}
+
+/* Boutons CTA avec effet de pulse */
+.btn.bg-blue-600 {
+    background: linear-gradient(135deg, #2563eb, #a855f7); /* Dégradé bleu-violet */
+    animation: pulse 2s infinite;
+}
+
+[data-theme="dark"] .btn.bg-blue-600 {
+    background: linear-gradient(135deg, #3b82f6, #c084fc);
+}
+
+/* Effet pour les icônes sociales */
+.contact-info .text-2xl {
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.contact-info .text-2xl:hover {
+    transform: rotate(10deg) scale(1.2); /* Rotation et zoom */
+    color: #a855f7; /* Violet au survol */
+}
+
+[data-theme="dark"] .contact-info .text-2xl:hover {
+    color: #c084fc;
+    filter: drop-shadow(0 0 8px rgba(192, 132, 252, 0.5)); /* Lueurs en mode sombre */
+}
+
+/* Style de la section Hero */
+#accueil {
+    position: relative;
+    overflow: hidden;
+}
+
+#accueil::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, rgba(255, 255, 255, 0.2), transparent);
+    opacity: 0.5;
+    z-index: 1;
+}
+
+/* Amélioration de la typographie */
+h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    letter-spacing: -0.025em; /* Espacement légèrement réduit pour élégance */
+}
+
+h1 {
+    font-size: 3.5rem; /* Taille augmentée pour impact */
+}
+
+h2 {
+    font-size: 2.5rem;
+}
+
+section {
+    padding-top: 6rem; /* Espacement accru pour aération */
+    padding-bottom: 6rem;
+}
+
+/* Style de la barre de navigation */
+nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.95); /* Fond légèrement transparent */
+    backdrop-filter: blur(8px); /* Effet de verre */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease; /* Transition pour le défilement */
+    z-index: 50;
+}
+
+/* Style lorsque la page est défilée */
+nav.scrolled {
+    padding: 0.5rem 0; /* Réduction de la hauteur */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15); /* Ombre plus prononcée */
+}
+
+/* Mode sombre */
+[data-theme="dark"] nav {
+    background: rgba(30, 41, 59, 0.95); /* Fond sombre avec transparence */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Conteneur principal */
+nav > div {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+/* Logo */
+nav a.text-2xl {
+    font-size: 1.75rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #2563eb, #a855f7); /* Dégradé bleu-violet */
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    transition: transform 0.3s ease;
+}
+
+nav a.text-2xl:hover {
+    transform: scale(1.05); /* Zoom subtil au survol */
+}
+
+/* Liens de navigation */
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem; /* Espacement plus moderne */
+    transition: all 0.3s ease;
+}
+
+.nav-links li a {
+    position: relative;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #4b5563; /* Gris foncé */
+    transition: color 0.3s ease;
+}
+
+.nav-links li a:hover {
+    color: #2563eb; /* Bleu au survol */
+}
+
+/* Effet de soulignement animé */
+.nav-links li a::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(to right, #2563eb, #a855f7); /* Dégradé bleu-violet */
+    transition: width 0.3s ease;
+}
+
+.nav-links li a:hover::after {
+    width: 100%;
+}
+
+/* Style pour le lien CV */
+.nav-links li a.flex {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px; /* Bordure arrondie */
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+.nav-links li a.flex:hover {
+    background: #eff6ff; /* Fond bleu clair au survol */
+    color: #2563eb;
+}
+
+/* Mode sombre pour les liens */
+[data-theme="dark"] .nav-links li a {
+    color: #d1d5db; /* Texte clair */
+}
+
+[data-theme="dark"] .nav-links li a:hover {
+    color: #c084fc; /* Violet clair au survol */
+}
+
+[data-theme="dark"] .nav-links li a.flex:hover {
+    background: #2d3748; /* Fond sombre au survol */
+    color: #c084fc;
+}
+
+/* Bouton de menu mobile */
+.mobile-menu-button {
+    display: none;
+    font-size: 1.5rem;
+    color: #4b5563;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.mobile-menu-button:hover {
+    transform: rotate(90deg); /* Rotation pour effet dynamique */
+    color: #2563eb;
+}
+
+[data-theme="dark"] .mobile-menu-button {
+    color: #d1d5db;
+}
+
+[data-theme="dark"] .mobile-menu-button:hover {
+    color: #c084fc;
+}
+
+/* Bouton de thème */
+.theme-toggle {
+    font-size: 1.25rem;
+    color: #4b5563;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.2); /* Zoom au survol */
+    color: #a855f7; /* Violet au survol */
+}
+
+[data-theme="dark"] .theme-toggle {
+    color: #d1d5db;
+}
+
+[data-theme="dark"] .theme-toggle:hover {
+    color: #c084fc;
+    filter: drop-shadow(0 0 8px rgba(192, 132, 252, 0.5)); /* Lueurs en mode sombre */
+}
+
+/* Menu mobile (responsivité) */
+@media (max-width: 640px) {
+    .mobile-menu-button {
+        display: block; /* Afficher le bouton hamburger */
+    }
+
+    .nav-links {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(8px);
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transform: translateY(-20px);
+        opacity: 0;
+        pointer-events: none;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .nav-links:not(.hidden) {
+        transform: translateY(0);
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .nav-links li {
+        margin: 0.75rem 0;
+    }
+
+    .nav-links li a {
+        font-size: 1.1rem;
+        padding: 0.5rem;
+        width: 100%;
+        text-align: center;
+    }
+
+    .nav-links li a.flex {
+        justify-content: center;
+    }
+
+    [data-theme="dark"] .nav-links {
+        background: rgba(30, 41, 59, 0.95);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+}
+
+/* Style du footer */
+footer {
+    background: linear-gradient(to top, #f1f5f9, #ffffff); /* Correction avec une couleur de fin */
+    background-color: #f9fafb;
+}
+
+[data-theme="dark"] footer {
+    background: linear-gradient(to top, #1e293b, #111827);
+}
+
+/* Style du formulaire de contact */
+.contact-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem; /* Espacement réduit entre les champs */
+}
+
+/* Style des groupes de champs */
+.form-group {
+    flex: 1;
+    min-width: 200px; /* Largeur minimale pour éviter que les champs soient trop étroits */
+}
+
+/* Ajustement des inputs et textarea */
+.contact-form input,
+.contact-form textarea {
+    padding: 0.5rem; /* Padding réduit pour compacité */
+    font-size: 0.9rem; /* Taille de police légèrement plus petite */
+    border-radius: 0.5rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Style du bouton, aligné avec les boutons de navigation */
+.contact-form button {
+    position: relative;
+    overflow: hidden;
+    padding: 0.75rem 1.5rem; /* Padding similaire au lien CV */
+    font-size: 0.9rem;
+    background: linear-gradient(135deg, #2563eb, #a855f7); /* Dégradé bleu-violet */
+    color: #ffffff;
+    border-radius: 0.5rem; /* Coins légèrement arrondis, pas rond */
+    transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    animation: pulse 2s infinite; /* Effet de pulse */
+}
+
+.contact-form button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.contact-form button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.4s ease;
+}
+
+.contact-form button:hover::before {
+    left: 100%; /* Effet de brillance au survol */
+}
+
+/* Mode sombre */
+[data-theme="dark"] .contact-form input,
+[data-theme="dark"] .contact-form textarea {
+    background-color: #1e293b;
+    border-color: #475569;
+    color: #e5e7eb;
+}
+
+[data-theme="dark"] .contact-form label {
+    color: #d1d5db;
+}
+
+[data-theme="dark"] .contact-form button {
+    background: linear-gradient(135deg, #3b82f6, #c084fc); /* Dégradé pour mode sombre */
+}
+
+[data-theme="dark"] .contact-form button:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3), 0 0 10px rgba(192, 132, 252, 0.3); /* Lueurs violettes */
+}
+
+/* Responsivité pour petits écrans */
+@media (max-width: 640px) {
+    .contact-form {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .form-group {
+        min-width: 100%; /* Champs en pleine largeur sur mobile */
+    }
+}
+/* Style du formulaire de contact */
+.contact-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem; /* Espacement réduit entre les champs */
+}
+
+/* Style des groupes de champs */
+.form-group {
+    flex: 1;
+    min-width: 200px; /* Largeur minimale pour éviter que les champs soient trop étroits */
+}
+
+/* Ajustement des inputs et textarea */
+.contact-form input,
+.contact-form textarea {
+    padding: 0.5rem; /* Padding réduit pour compacité */
+    font-size: 0.9rem; /* Taille de police légèrement plus petite */
+    border-radius: 0.25rem; /* Coins légèrement arrondis pour cohérence */
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Style du bouton */
+.contact-form button {
+    width: 100%; /* Bouton en pleine largeur pour être en dessous */
+    padding: 0.5rem 1rem; /* Padding ajusté pour un look simple */
+    font-size: 0.9rem;
+    background-color: #2563eb; /* Couleur bleue unie pour simplicité */
+    color: #ffffff;
+    border: none;
+    border-radius: 0.25rem; /* Coins légèrement arrondis, pas ronds */
+    transition: background-color 0.3s ease;
+    text-align: center;
+}
+
+.contact-form button:hover {
+    background-color: #1d4ed8; /* Bleu plus foncé au survol */
+}
+
+/* Mode sombre */
+[data-theme="dark"] .contact-form input,
+[data-theme="dark"] .contact-form textarea {
+    background-color: #1e293b;
+    border-color: #475569;
+    color: #e5e7eb;
+}
+
+[data-theme="dark"] .contact-form label {
+    color: #d1d5db;
+}
+
+[data-theme="dark"] .contact-form button {
+    background-color: #3b82f6; /* Bleu clair pour le mode sombre */
+}
+
+[data-theme="dark"] .contact-form button:hover {
+    background-color: #2563eb; /* Bleu plus foncé au survol */
+}
+
+/* Responsivité pour petits écrans */
+@media (max-width: 640px) {
+    .contact-form {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .form-group {
+        min-width: 100%; /* Champs en pleine largeur sur mobile */
+    }
+}
