@@ -1,115 +1,9 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-
-        function initContactForm() {
-    const contactForm = document.querySelector('.contact-form');
-    contactForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const name = contactForm.querySelector('#name').value.trim();
-        const email = contactForm.querySelector('#email').value.trim();
-        const subject = contactForm.querySelector('#subject').value.trim();
-        const message = contactForm.querySelector('#message').value.trim();
-
-        if (name.length < 2) {
-            showError('Le nom doit contenir au moins 2 caractères');
-            return;
-        }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            showError('Veuillez entrer un email valide');
-            return;
-        }
-        if (subject.length < 3) {
-            showError('Le sujet doit contenir au moins 3 caractères');
-            return;
-        }
-        if (message.length < 10) {
-            showError('Le message doit contenir au moins 10 caractères');
-            return;
-        }
-
-        const submitButton = contactForm.querySelector('button[type="submit"]');
-        const originalText = submitButton.innerHTML;
-        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
-        submitButton.disabled = true;
-
-        const formData = new FormData(contactForm);
-        const data = Object.fromEntries(formData.entries());
-        try {
-            await new Promise(resolve => setTimeout(resolve, 1500));
-            console.log('Form data:', data);
-            contactForm.reset();
-            showSuccess('Message envoyé avec succès!');
-        } catch (error) {
-            console.error('Error:', error);
-            showError('Une erreur est survenue.');
-        } finally {
-            submitButton.innerHTML = originalText;
-            submitButton.disabled = false;
-        }
-    });
-
-    function showSuccess(message) {
-        const successMessage = document.createElement('div');
-        successMessage.className = 'bg-green-100 text-green-800 p-2 rounded-lg flex items-center space-x-2 text-sm';
-        successMessage.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
-        contactForm.insertBefore(successMessage, contactForm.firstChild);
-        setTimeout(() => successMessage.remove(), 3000);
-    }
-
-    function showError(message) {
-        const errorMessage = document.createElement('div');
-        errorMessage.className = 'bg-red-100 text-red-800 p-2 rounded-lg flex items-center space-x-2 text-sm';
-        errorMessage.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${message}`;
-        contactForm.insertBefore(errorMessage, contactForm.firstChild);
-        setTimeout(() => errorMessage.remove(), 3000);
-    }
-}
-
-        
-</script>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Portfolio de Achille Guy Gle - Développeur Full Stack">
+    <meta name="description" content="Portfolio de Achille Guy Gle - Cybersécurité & Développement Full Stack">
     <meta name="keywords" content="développeur full stack, web development, HTML, CSS, JavaScript, PHP, Python">
     <title>Portfolio</title>
     <link rel="icon" href="pf4.ico" type="image/x-icon">
@@ -120,6 +14,8 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <!-- XLSX Library for Excel file handling -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body class="bg-white text-gray-800 transition-colors duration-300">
     <!-- Navigation -->
@@ -130,12 +26,14 @@
                 <i class="fas fa-bars"></i>
             </button>
             <ul class="nav-links hidden sm:flex space-x-6">
-                <li><a href="#accueil" class="nav-link text-gray-600 hover:text-blue-600 transition">Accueil</a></li>
-                <li><a href="#formation" class="nav-link text-gray-600 hover:text-blue-600 transition">Formation</a></li>
-                <li><a href="#competences" class="nav-link text-gray-600 hover:text-blue-600 transition">Compétences</a></li>
-                <li><a href="#associations" class="nav-link text-gray-600 hover:text-blue-600 transition">Associations</a></li>
-                <li><a href="#projets" class="nav-link text-gray-600 hover:text-blue-600 transition">Projets</a></li>
-                <li><a href="#contact" class="nav-link text-gray-600 hover:text-blue-600 transition">Contact</a></li>
+                <li><a href="#accueil" class="nav-link text-gray-600 hover:text-blue-600 transition" data-lang-key="nav.home">Accueil</a></li>
+                <li><a href="#formation" class="nav-link text-gray-600 hover:text-blue-600 transition" data-lang-key="nav.formation">Formation</a></li>
+                <li><a href="#competences" class="nav-link text-gray-600 hover:text-blue-600 transition" data-lang-key="nav.competences">Compétences</a></li>
+                <li><a href="#associations" class="nav-link text-gray-600 hover:text-blue-600 transition" data-lang-key="nav.associations">Associations</a></li>
+                <li><a href="#projets" class="nav-link text-gray-600 hover:text-blue-600 transition" data-lang-key="nav.projets">Projets</a></li>
+                <li><a href="#contact" class="nav-link text-gray-600 hover:text-blue-600 transition" data-lang-key="nav.contact">Contact</a></li>
+                <li id="nav-lang-en" class="lang-switcher"><a href="#" class="nav-link text-gray-600 hover:text-blue-600 transition" data-lang-switch="en">English</a></li>
+                <li id="nav-lang-fr" class="lang-switcher hidden"><a href="#" class="nav-link text-gray-600 hover:text-blue-600 transition" data-lang-switch="fr">Français</a></li>
                 <li><a href="CV_Stage.pdf" download class="nav-link text-gray-600 hover:text-blue-600 transition flex items-center space-x-1">
                     <i class="fas fa-file-download"></i>
                     <span>CV</span>
@@ -152,15 +50,15 @@
         <div class="absolute inset-0 bg-gradient-to-r from-black/60 to-blue-900/40"></div>
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 text-white">
             <h1 class="text-4xl sm:text-6xl font-bold mb-4 fade-in">Achille Guy Gle</h1>
-            <p class="text-xl sm:text-3xl mb-6 fade-in">Développeur Full Stack</p>
+            <p class="text-xl sm:text-3xl mb-6 fade-in" data-lang-key="hero.title">Cybersécurité & Développement Full Stack</p>
             <div class="flex justify-center space-x-4 mb-6">
                 <a href="https://github.com/Guy277" target="_blank" class="text-2xl hover:text-blue-400 transition"><i class="fab fa-github"></i></a>
-                <a href="#" target="_blank" class="text-2xl hover:text-blue-400 transition"><i class="fab fa-linkedin"></i></a>
+                <a href="https://www.linkedin.com/in/gle-guy-achille-674a4b282" target="_blank" class="text-2xl hover:text-blue-400 transition"><i class="fab fa-linkedin"></i></a>
                 <a href="#" target="_blank" class="text-2xl hover:text-blue-400 transition"><i class="fab fa-twitter"></i></a>
             </div>
             <div class="space-x-4">
-                <a href="#projets" class="btn inline-block bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition">Voir mes projets</a>
-                <a href="#contact" class="btn inline-block border-2 border-white text-white px-6 py-3 rounded-full hover:bg-white hover:text-blue-600 transition">Me contacter</a>
+                <a href="#projets" class="btn inline-block bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition" data-lang-key="hero.projets">Voir mes projets</a>
+                <a href="#contact" class="btn inline-block border-2 border-white text-white px-6 py-3 rounded-full hover:bg-white hover:text-blue-600 transition" data-lang-key="hero.contact">Me contacter</a>
             </div>
         </div>
     </section>
@@ -168,51 +66,59 @@
     <!-- Formation Section -->
     <section id="formation" class="py-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800">Formation</h2>
+            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800" data-lang-key="formation.title">Formation</h2>
             <div class="relative max-w-3xl mx-auto">
                 <div class="absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-gray-200"></div>
                 <div class="space-y-12">
                     <div class="education-item relative w-1/2 pr-8 slide-in-left">
                         <div class="absolute top-0 right-0 w-4 h-4 bg-blue-600 rounded-full border-2 border-white"></div>
+                        <div class="year font-semibold text-blue-600">2025-2026</div>
+                        <div class="card-hover bg-white p-6 rounded-xl shadow-lg">
+                            <h3 class="text-xl font-semibold" data-lang-key="formation.m1">Master 1. CYBERSECURITE ET INTELLIGENCE ARTIFICIELLE </h3>
+                            <p class="text-gray-600" data-lang-key="formation.esatic">Ecole Supérieure Africaine des TIC ( ESATIC )</p>
+                        </div>
+                    </div>
+                    <div class="education-item relative w-1/2 pr-8 slide-in-left">
+                        <div class="absolute top-0 right-0 w-4 h-4 bg-blue-600 rounded-full border-2 border-white"></div>
                         <div class="year font-semibold text-blue-600">2024-2025</div>
                         <div class="card-hover bg-white p-6 rounded-xl shadow-lg">
-                            <h3 class="text-xl font-semibold">Licence 3. Mathématique Et Informatique</h3>
-                            <p class="text-gray-600">Université Félix-Houphouët-Boigny</p>
+                            <h3 class="text-xl font-semibold" data-lang-key="formation.l3">Licence 3. Mathématique Et Informatique</h3>
+                            <p class="text-gray-600" data-lang-key="formation.ufhb">Université Félix-Houphouët-Boigny</p>
                         </div>
                     </div>
                     <div class="education-item relative w-1/2 ml-auto pl-8 slide-in-right">
                         <div class="absolute top-0 left-0 w-4 h-4 bg-blue-600 rounded-full border-2 border-white"></div>
                         <div class="year font-semibold text-blue-600">2023-2024</div>
                         <div class="card-hover bg-white p-6 rounded-xl shadow-lg">
-                            <h3 class="text-xl font-semibold">Licence 2. Mathématique Et Informatique</h3>
-                            <p class="text-gray-600">Université Félix-Houphouët-Boigny</p>
+                            <h3 class="text-xl font-semibold" data-lang-key="formation.l2">Licence 2. Mathématique Et Informatique</h3>
+                            <p class="text-gray-600" data-lang-key="formation.ufhb">Université Félix-Houphouët-Boigny</p>
                         </div>
                     </div>
                     <div class="education-item relative w-1/2 pr-8 slide-in-left">
                         <div class="absolute top-0 right-0 w-4 h-4 bg-blue-600 rounded-full border-2 border-white"></div>
                         <div class="year font-semibold text-blue-600">2021-2022</div>
                         <div class="card-hover bg-white p-6 rounded-xl shadow-lg">
-                            <h3 class="text-xl font-semibold">Licence 1. Mathématique Et Informatique</h3>
-                            <p class="text-gray-600">Université Félix-Houphouët-Boigny</p>
+                            <h3 class="text-xl font-semibold" data-lang-key="formation.l1">Licence 1. Mathématique Et Informatique</h3>
+                            <p class="text-gray-600" data-lang-key="formation.ufhb">Université Félix-Houphouët-Boigny</p>
                         </div>
                     </div>
                 </div>
             </div>
-            <h2 class="text-4xl font-bold text-center mt-16 mb-12 text-gray-800">Certifications</h2>
+            <h2 class="text-4xl font-bold text-center mt-16 mb-12 text-gray-800" data-lang-key="formation.certifications">Certifications</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div class="certification-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
                     <i class="fas fa-certificate text-4xl text-blue-600 mb-4"></i>
-                    <h3 class="text-xl font-semibold">Bureautique & Infographie</h3>
-                    <p class="text-gray-600">Ambassade des États-Unis CI & Impact Group</p>
+                    <h3 class="text-xl font-semibold" data-lang-key="cert.bureautique">Bureautique & Infographie</h3>
+                    <p class="text-gray-600" data-lang-key="cert.ambassade">Ambassade des États-Unis CI & Impact Group</p>
                 </div>
                 <div class="certification-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
                     <i class="fas fa-robot text-4xl text-blue-600 mb-4"></i>
-                    <h3 class="text-xl font-semibold">3D Design, IA & Robotique</h3>
-                    <p class="text-gray-600">Centre Ivoirien de Robotique</p>
+                    <h3 class="text-xl font-semibold" data-lang-key="cert.robotique">3D Design, IA & Robotique</h3>
+                    <p class="text-gray-600" data-lang-key="cert.centre">Centre Ivoirien de Robotique</p>
                 </div>
                 <div class="certification-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
                     <i class="fas fa-mobile-alt text-4xl text-blue-600 mb-4"></i>
-                    <h3 class="text-xl font-semibold">Robot Mobile Connecté</h3>
+                    <h3 class="text-xl font-semibold" data-lang-key="cert.robot">Robot Mobile Connecté</h3>
                     <p class="text-gray-600">Orange Digital Center</p>
                 </div>
             </div>
@@ -222,25 +128,127 @@
     <!-- Compétences Section -->
     <section id="competences" class="py-20 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800">Mes Compétences</h2>
-            <div class="skills-grid grid grid-cols-1 gap-6"></div>
+            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800" data-lang-key="competences.title">Mes Compétences</h2>
+            <div class="skills-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Skill Card: HTML/CSS -->
+                <div class="skill-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
+                    <div class="skill-icon text-5xl mb-4">
+                        <i class="fab fa-html5 text-orange-500"></i>
+                        <i class="fab fa-css3-alt text-blue-500"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">HTML/CSS</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0" data-width="90%"></div>
+                    </div>
+                    <span>90%</span>
+                </div>
+                <!-- Skill Card: JavaScript -->
+                <div class="skill-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
+                    <div class="skill-icon text-5xl mb-4">
+                        <i class="fab fa-js text-yellow-500"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">JavaScript</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0" data-width="75%"></div>
+                    </div>
+                    <span>75%</span>
+                </div>
+                <!-- Skill Card: Python -->
+                <div class="skill-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
+                    <div class="skill-icon text-5xl mb-4">
+                        <i class="fab fa-python text-green-500"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Python</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0" data-width="80%"></div>
+                    </div>
+                    <span>80%</span>
+                </div>
+                <!-- Skill Card: PHP -->
+                <div class="skill-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
+                    <div class="skill-icon text-5xl mb-4">
+                        <i class="fab fa-php text-indigo-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">PHP</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0" data-width="70%"></div>
+                    </div>
+                    <span>70%</span>
+                </div>
+                <!-- Skill Card: Cybersecurity -->
+                <div class="skill-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
+                    <div class="skill-icon text-5xl mb-4">
+                        <i class="fas fa-shield-alt text-green-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2" data-lang-key="skills.cybersecurity">Cybersécurité</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0" data-width="65%"></div>
+                    </div>
+                    <span>65%</span>
+                </div>
+                <!-- Skill Card: Git/GitHub -->
+                <div class="skill-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
+                    <div class="skill-icon text-5xl mb-4">
+                        <i class="fab fa-git-alt text-red-600"></i>
+                        <i class="fab fa-github text-gray-800"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Git/GitHub</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0" data-width="85%"></div>
+                    </div>
+                    <span>85%</span>
+                </div>
+                <!-- Skill Card: Linux -->
+                <div class="skill-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
+                    <div class="skill-icon text-5xl mb-4">
+                        <i class="fab fa-linux text-yellow-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Linux</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0" data-width="70%"></div>
+                    </div>
+                    <span>70%</span>
+                </div>
+                <!-- Skill Card: MySQL/Database -->
+                <div class="skill-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
+                    <div class="skill-icon text-5xl mb-4">
+                        <i class="fas fa-database text-blue-700"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">MySQL</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0" data-width="75%"></div>
+                    </div>
+                    <span>75%</span>
+                </div>
+                <!-- Skill Card: UI/UX Design -->
+                <div class="skill-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
+                    <div class="skill-icon text-5xl mb-4">
+                        <i class="fas fa-paint-brush text-pink-500"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">UI/UX Design</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0" data-width="65%"></div>
+                    </div>
+                    <span>65%</span>
+                </div>
+            </div>
         </div>
     </section>
 
     <!-- Langues Section -->
     <section id="langues" class="py-20">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800">Langues</h2>
+            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800" data-lang-key="langues.title">Langues</h2>
             <div class="languages-grid grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-lg mx-auto">
                 <div class="language-card card-hover bg-white p-6 rounded-xl shadow-lg text-center">
-                    <h3 class="text-xl font-semibold mb-2">Français</h3>
+                    <h3 class="text-xl font-semibold mb-2" data-lang-key="langues.francais">Français</h3>
                     <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
                         <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0" data-width="85%"></div>
                     </div>
                     <span>85%</span>
                 </div>
                 <div class="language-card card-hover bg-white p-6 rounded-xl shadow-lg text-center">
-                    <h3 class="text-xl font-semibold mb-2">Anglais</h3>
+                    <h3 class="text-xl font-semibold mb-2" data-lang-key="langues.anglais">Anglais</h3>
                     <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
                         <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0" data-width="60%"></div>
                     </div>
@@ -253,12 +261,12 @@
     <!-- Engagements Associatifs Section -->
     <section id="associations" class="py-20 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800">Engagements Associatifs</h2>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800" data-lang-key="associations.title">Engagements Associatifs</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
                 <div class="association-card card-hover bg-white p-6 rounded-xl shadow-lg text-center">
                     <img src="img/Logo-Scout.jpg" alt="Logo ASCCI" class="w-32 h-32 object-contain mx-auto mb-4 rounded-full">
                     <h3 class="text-xl font-semibold mb-2">ASCCI</h3>
-                    <p class="text-gray-600 mb-4">Association des Scouts Catholiques de Côte d'Ivoire</p>
+                    <p class="text-gray-600 mb-4" data-lang-key="associations.ascci">Association des Scouts Catholiques de Côte d'Ivoire</p>
                     <div class="flex justify-center space-x-4">
                         <a href="#" target="_blank" class="text-blue-600 hover:text-blue-800 transition">
                             <i class="fab fa-facebook"></i>
@@ -271,9 +279,22 @@
                 <div class="association-card card-hover bg-white p-6 rounded-xl shadow-lg text-center">
                     <img src="img/Logo-code-mi.jpg" alt="Logo CODE-MI" class="w-32 h-32 object-contain mx-auto mb-4 rounded-full">
                     <h3 class="text-xl font-semibold mb-2">CODE-MI</h3>
-                    <p class="text-gray-600 mb-4">Collège des Délégués de l'UFR-MI de l'Université Félix Houphouët-Boigny</p>
+                    <p class="text-gray-600 mb-4" data-lang-key="associations.codemi">Collège des Délégués de l'UFR-MI de l'Université Félix Houphouët-Boigny</p>
                     <div class="flex justify-center space-x-4">
                         <a href="#" target="_blank" class="text-blue-600 hover:text-blue-800 transition">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                        <a href="#" target="_blank" class="text-blue-600 hover:text-blue-800 transition">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="association-card card-hover bg-white p-6 rounded-xl shadow-lg text-center">
+                    <img src="img/C2E-logo.jpg" alt="Logo C2E" class="w-32 h-32 object-contain mx-auto mb-4 rounded-full">
+                    <h3 class="text-xl font-semibold mb-2">C2E</h3>
+                    <p class="text-gray-600 mb-4" data-lang-key="associations.c2e">Conseil Estudiantin de l'ESATIC</p>
+                    <div class="flex justify-center space-x-4">
+                        <a href="https://www.facebook.com/groups/c2e.esatic" target="_blank" class="text-blue-600 hover:text-blue-800 transition">
                             <i class="fab fa-facebook"></i>
                         </a>
                         <a href="#" target="_blank" class="text-blue-600 hover:text-blue-800 transition">
@@ -288,334 +309,279 @@
     <!-- Projets Section -->
     <section id="projets" class="py-20 bg-gray-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800">Mes Projets</h2>
+            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800" data-lang-key="projets.title">Mes Projets</h2>
             <div class="projects-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </div>
     </section>
 
-<!-- Contact Section -->
-<section id="contact" class="py-16">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 class="text-4xl font-bold text-center mb-10 text-gray-800">Contact</h2>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <form class="contact-form flex flex-wrap gap-4" method="POST" action="https://formspree.io/f/xgvkrvly">
-                <div class="flex flex-wrap gap-4 w-full">
-                    <div class="form-group flex-1 min-w-[200px]">
-                        <label for="name" class="block font-medium mb-1 text-gray-700">Nom</label>
-                        <input type="text" id="name" name="name" required class="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
+    <!-- Contact Section -->
+    <section id="contact" class="py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl font-bold text-center mb-10 text-gray-800" data-lang-key="contact.title">Contact</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <form class="contact-form flex flex-wrap gap-4" method="POST" action="https://formspree.io/f/xgvkrvly">
+                    <div class="flex flex-wrap gap-4 w-full">
+                        <div class="form-group flex-1 min-w-[200px]">
+                            <label for="name" class="block font-medium mb-1 text-gray-700" data-lang-key="contact.nom">Nom</label>
+                            <input type="text" id="name" name="name" required class="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
+                        </div>
+                        <div class="form-group flex-1 min-w-[200px]">
+                            <label for="email" class="block font-medium mb-1 text-gray-700">Email</label>
+                            <input type="email" id="email" name="email" required class="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
+                        </div>
+                        <div class="form-group flex-1 min-w-[200px]">
+                            <label for="subject" class="block font-medium mb-1 text-gray-700" data-lang-key="contact.sujet">Sujet</label>
+                            <input type="text" id="subject" name="subject" required class="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
+                        </div>
                     </div>
-                    <div class="form-group flex-1 min-w-[200px]">
-                        <label for="email" class="block font-medium mb-1 text-gray-700">Email</label>
-                        <input type="email" id="email" name="email" required class="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
+                    <div class="form-group w-full">
+                        <label for="message" class="block font-medium mb-1 text-gray-700" data-lang-key="contact.message">Message</label>
+                        <textarea id="message" name="message" required class="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 min-h-[100px] resize-y"></textarea>
                     </div>
-                    <div class="form-group flex-1 min-w-[200px]">
-                        <label for="subject" class="block font-medium mb-1 text-gray-700">Sujet</label>
-                        <input type="text" id="subject" name="subject" required class="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
-                    </div>
-                </div>
-                <div class="form-group w-full">
-                    <label for="message" class="block font-medium mb-1 text-gray-700">Message</label>
-                    <textarea id="message" name="message" required class="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 min-h-[100px] resize-y"></textarea>
-                </div>
-                <button type="submit" class="btn bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition flex items-center space-x-2">
-                    <span>Envoyer</span>
-                </button>
-            </form>
-        
-             
+                    <button type="submit" class="btn bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition flex items-center space-x-2">
+                        <span data-lang-key="contact.envoyer">Envoyer</span>
+                    </button>
+                </form>
+            </div>
         </div>
     </section>
 
     <!-- Footer -->
     <footer class="bg-white border-t border-gray-200 py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-           
-                <div>
-                    <h3 class="text-xl font-semibold text-blue-600 mb-4">Contact</h3>
-                    <p class="text-gray-600">Email: gleguyachille@gmail.com</p>
-                    <p class="text-gray-600">Téléphone: +225 05 55 16 16 29 / +225 07 03 35 46 88</p>
+            <div class="flex flex-col items-center space-y-6">
+                <div class="text-center">
+                    <h3 class="text-xl font-semibold text-blue-600 mb-4" data-lang-key="contact.title">Contact</h3>
+                    <p class="text-gray-600">Email: achille.gle2025@esatic.edu.ci</p>
+                    <p class="text-gray-600" data-lang-key="footer.telephone">Téléphone: +225 05 55 16 16 29 / +225 07 03 35 46 88</p>
                 </div>
-                 <div class="contact-info flex flex-col items-center space-y-6">
-                    <a href="CV_Stage.pdf" class="btn bg-gray-200 text-gray-800 px-6 py-3 rounded-full hover:bg-gray-300 transition flex items-center space-x-2" download>
-                        <i class="fas fa-download"></i>
-                        <span>Télécharger mon CV</span>
-                    </a>
-                    <div class="flex space-x-4">
-                        <a href="https://github.com/Guy277" target="_blank" class="text-2xl hover:text-blue-600 transition"><i class="fab fa-github"></i></a>
-                        <a href="#" target="_blank" class="text-2xl hover:text-blue-600 transition"><i class="fab fa-linkedin"></i></a>
-                        <a href="#" target="_blank" class="text-2xl hover:text-blue-600 transition"><i class="fab fa-twitter"></i></a>
-                    </div>
-
+                <a href="CV_Stage.pdf" class="btn bg-gray-200 text-gray-800 px-6 py-3 rounded-full hover:bg-gray-300 transition flex items-center space-x-2" download>
+                    <i class="fas fa-download"></i>
+                    <span data-lang-key="footer.download_cv">Télécharger mon CV</span>
+                </a>
+                <div class="flex space-x-4">
+                    <a href="https://github.com/Guy277" target="_blank" class="text-2xl hover:text-blue-600 transition"><i class="fab fa-github"></i></a>
+                    <a href="https://www.linkedin.com/in/gle-guy-achille-674a4b282" target="_blank" class="text-2xl hover:text-blue-600 transition"><i class="fab fa-linkedin"></i></a>
+                    <a href="#" target="_blank" class="text-2xl hover:text-blue-600 transition"><i class="fab fa-twitter"></i></a>
                 </div>
             </div>
             <div class="mt-8 pt-8 border-t border-gray-200 text-center text-gray-600">
-                <p>© 2025 Achille Guy Gle. Tous droits réservés.</p>
+                <p data-lang-key="footer.copyright">© 2025 Achille Guy Gle. Tous droits réservés.</p>
             </div>
         </div>
     </footer>
 
     <script>
-        // Données des compétences
-        const skills = [
-            {
-                name: 'Programmation',
-                icon: 'fas fa-code',
-                subSkills: [
-                    {
-                        name: 'HTML/CSS',
-                        level: 90,
-                        icon: 'fab fa-html5',
-                        projects: []
-                    },
-                    {
-                        name: 'JavaScript',
-                        level: 75,
-                        icon: 'fab fa-js',
-                        projects: []
-                    },
-                    {
-                        name: 'PHP',
-                        level: 70,
-                        icon: 'fab fa-php',
-                        projects: []
-                    },
-                    {
-                        name: 'C/C++',
-                        level: 80,
-                        icon: 'fas fa-code',
-                        projects: []
-                    },
-                    {
-                        name: 'Python',
-                        level: 85,
-                        icon: 'fab fa-python',
-                        projects: []
-                    },
-                    {
-                        name: 'SQL',
-                        level: 80,
-                        icon: 'fas fa-database',
-                        projects: []
+        // Variables globales pour la gestion des fichiers Excel
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+
+        function filledCell(cell) {
+            return cell !== '' && cell != null;
+        }
+
+        function loadFileData(filename) {
+            if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+                try {
+                    var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                    var firstSheetName = workbook.SheetNames[0];
+                    var worksheet = workbook.Sheets[firstSheetName];
+
+                    // Convert sheet to JSON to filter blank rows
+                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                    // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                    var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                    // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                    var headerRowIndex = filteredData.findIndex((row, index) =>
+                      row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                    );
+                    // Fallback
+                    if (headerRowIndex === -1 || headerRowIndex > 25) {
+                      headerRowIndex = 0;
                     }
-                ]
-            },
-            {
-                name: 'Systèmes et Réseaux',
-                icon: 'fas fa-network-wired',
-                subSkills: [
-                    {
-                        name: 'Cisco Packet Tracer',
-                        level: 60,
-                        icon: 'fas fa-network-wired',
-                        projects: []
-                    },
-                    {
-                        name: 'Linux',
-                        level: 75,
-                        icon: 'fab fa-linux',
-                        projects: []
-                    }
-                ]
-            },
-            {
-                name: 'Infographie',
-                icon: 'fas fa-palette',
-                subSkills: [
-                    {
-                        name: 'Illustrator',
-                        level: 85,
-                        icon: 'fas fa-pen-fancy',
-                        projects: [ ]
-                    },
-                    {
-                        name: 'Photoshop',
-                        level: 80,
-                        icon: 'fas fa-image',
-                        projects: [ ]
-                    }
-                ]
-            },
-            {
-                name: 'Mathématiques',
-                icon: 'fas fa-calculator',
-                subSkills: [
-                    {
-                        name: 'Algèbre',
-                        level: 90,
-                        icon: 'fas fa-square-root-alt',
-                        projects: []
-                    },
-                    {
-                        name: 'Analyse',
-                        level: 85,
-                        icon: 'fas fa-chart-line',
-                        projects: []
-                    },
-                    {
-                        name: 'Probabilités/Statistiques',
-                        level: 80,
-                        icon: 'fas fa-chart-bar',
-                        projects: []
-                    }
-                ]
+
+                    // Convert filtered JSON back to CSV
+                    var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                    csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                    return csv;
+                } catch (e) {
+                    console.error(e);
+                    return "";
+                }
             }
-        ];
+            return gk_fileData[filename] || "";
+        }
+
+        // Langue : fr par défaut, persistance dans localStorage
+        let currentLang = localStorage.getItem('portfolio-lang') || 'fr';
+
+        const translations = {
+            fr: {
+                'nav.home': 'Accueil',
+                'nav.formation': 'Formation',
+                'nav.competences': 'Compétences',
+                'nav.associations': 'Associations',
+                'nav.projets': 'Projets',
+                'nav.contact': 'Contact',
+                'hero.title': 'Cybersécurité & Développement Full Stack',
+                'hero.projets': 'Voir mes projets',
+                'hero.contact': 'Me contacter',
+                'formation.title': 'Formation',
+                'formation.m1': 'Master 1. CYBERSECURITE ET INTELLIGENCE ARTIFICIELLE',
+                'formation.esatic': 'Ecole Supérieure Africaine des TIC ( ESATIC )',
+                'formation.l3': 'Licence 3. Mathématique Et Informatique',
+                'formation.l2': 'Licence 2. Mathématique Et Informatique',
+                'formation.l1': 'Licence 1. Mathématique Et Informatique',
+                'formation.ufhb': 'Université Félix-Houphouët-Boigny',
+                'formation.certifications': 'Certifications',
+                'cert.bureautique': 'Bureautique & Infographie',
+                'cert.ambassade': 'Ambassade des États-Unis CI & Impact Group',
+                'cert.robotique': '3D Design, IA & Robotique',
+                'cert.centre': 'Centre Ivoirien de Robotique',
+                'cert.robot': 'Robot Mobile Connecté',
+                'competences.title': 'Mes Compétences',
+                'langues.title': 'Langues',
+                'langues.francais': 'Français',
+                'langues.anglais': 'Anglais',
+                'associations.title': 'Engagements Associatifs',
+                'associations.ascci': 'Association des Scouts Catholiques de Côte d\'Ivoire',
+                'associations.codemi': 'Collège des Délégués de l\'UFR-MI de l\'Université Félix Houphouët-Boigny',
+                'associations.c2e': 'Conseil Estudiantin de l\'ESATIC',
+                'projets.title': 'Mes Projets',
+                'contact.title': 'Contact',
+                'contact.nom': 'Nom',
+                'contact.sujet': 'Sujet',
+                'contact.message': 'Message',
+                'contact.envoyer': 'Envoyer',
+                'footer.telephone': 'Téléphone: +225 05 55 16 16 29 / +225 07 03 35 46 88',
+                'footer.download_cv': 'Télécharger mon CV',
+                'footer.copyright': '© 2025 Achille Guy Gle. Tous droits réservés.',
+                'skills.projects_done': 'Projets réalisés',
+                'btn.code': 'Code',
+                'btn.demo': 'Demo'
+            },
+            en: {
+                'nav.home': 'Home',
+                'nav.formation': 'Education',
+                'nav.competences': 'Skills',
+                'nav.associations': 'Associations',
+                'nav.projets': 'Projects',
+                'nav.contact': 'Contact',
+                'hero.title': 'Cybersecurity & Full Stack Development',
+                'hero.projets': 'View my projects',
+                'hero.contact': 'Contact me',
+                'formation.title': 'Education',
+                'formation.m1': 'Master 1. Cybersecurity and Artificial Intelligence',
+                'formation.esatic': 'African School of ICT (ESATIC)',
+                'formation.l3': 'Bachelor 3. Mathematics and Computer Science',
+                'formation.l2': 'Bachelor 2. Mathematics and Computer Science',
+                'formation.l1': 'Bachelor 1. Mathematics and Computer Science',
+                'formation.ufhb': 'Félix Houphouët-Boigny University',
+                'formation.certifications': 'Certifications',
+                'cert.bureautique': 'Office & Graphic Design',
+                'cert.ambassade': 'US Embassy CI & Impact Group',
+                'cert.robotique': '3D Design, AI & Robotics',
+                'cert.centre': 'Ivorian Robotics Center',
+                'cert.robot': 'Connected Mobile Robot',
+                'competences.title': 'My Skills',
+                'langues.title': 'Languages',
+                'langues.francais': 'French',
+                'langues.anglais': 'English',
+                'associations.title': 'Associative Involvement',
+                'associations.ascci': 'Association of Catholic Scouts of Côte d\'Ivoire',
+                'associations.codemi': 'Delegate Council of UFR-MI at Félix Houphouët-Boigny University',
+                'associations.c2e': 'Student Council of ESATIC',
+                'projets.title': 'My Projects',
+                'contact.title': 'Contact',
+                'contact.nom': 'Name',
+                'contact.sujet': 'Subject',
+                'contact.message': 'Message',
+                'contact.envoyer': 'Send',
+                'footer.telephone': 'Phone: +225 05 55 16 16 29 / +225 07 03 35 46 88',
+                'footer.download_cv': 'Download my CV',
+                'footer.copyright': '© 2025 Achille Guy Gle. All rights reserved.',
+                'skills.projects_done': 'Projects completed',
+                'btn.code': 'Code',
+                'btn.demo': 'Demo'
+            }
+        };
+
+        function applyTranslations() {
+            document.querySelectorAll('[data-lang-key]').forEach(el => {
+                const key = el.getAttribute('data-lang-key');
+                if (translations[currentLang] && translations[currentLang][key])
+                    el.textContent = translations[currentLang][key];
+            });
+        }
+
+        function toggleLangButtons() {
+            const navEn = document.getElementById('nav-lang-en');
+            const navFr = document.getElementById('nav-lang-fr');
+            if (currentLang === 'en') {
+                if (navEn) navEn.classList.add('hidden');
+                if (navFr) navFr.classList.remove('hidden');
+            } else {
+                if (navEn) navEn.classList.remove('hidden');
+                if (navFr) navFr.classList.add('hidden');
+            }
+        }
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('portfolio-lang', lang);
+            document.documentElement.lang = lang === 'en' ? 'en' : 'fr';
+            applyTranslations();
+            toggleLangButtons();
+        }
+
+        function initLanguageSwitcher() {
+            document.querySelectorAll('[data-lang-switch]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    setLanguage(btn.getAttribute('data-lang-switch'));
+                });
+            });
+        }
 
         // Données des projets
         const projects = [
-            {
-                name: 'Site Math-Info',
-                description: 'Site web pour le département Mathématique et Informatique',
-                image: 'img/site-MI2.png',
-                technologies: ['HTML', 'CSS', 'JavaScript'],
-                github: 'https://github.com/Guy277/guy277.github.io.git',  
-                demo: 'https://mi-site.com'
-            },
-            {
-                name: 'Site Resto',
-                description: 'Site web pour des restaurants',
-                image: 'img/resto.png',
-                technologies: ['HTML', 'CSS', 'JavaScript'],
-                github: 'https://github.com/Guy277/Resto-site.git',
-                demo: 'https://guy277.github.io/Resto-site/'
-            },
-            {
-                name: 'Todo List',
-                description: 'Application de gestion de tâches avec interface moderne',
-                image: 'img/todo.png',
-                technologies: ['HTML', 'CSS', 'JavaScript', 'PHP'],
-                github: 'https://github.com/Guy277/toDo.git',
-                demo: 'https://guy277.github.io/toDo/'
-            },
-            {
-                name: 'App Desktop 1',
-                description: 'Application de gestion de notes etudiants',
-                image: 'img/home-py.png',
-                technologies: ['Python', 'Tkinter', 'MySQL'],
-                github: 'https://github.com/Guy277/toDo.git',
-                demo: 'https://todo-list.com'
-            },
-            {
-                name: 'App Desktop 2',
-                description: 'Application de gestion des femmes chercheuses de Côte d\'Ivoire',
-                image: 'img/home2-py.png',
-                technologies: ['Python', 'Tkinter/Custom-Tkinter', 'MySQL'],
-                github: 'https://github.com/Guy277/toDo.git',
-                demo: 'https://todo-list.com'
-            },
-            {
-                name: 'Simulation Reseau',
-                description: 'Simulation de reseau avec cisco packet tracer',
-                image: 'img/cisco.png',
-                technologies: ['Cisco Packet Tracer'],
-                github: 'https://github.com/Guy277/Simulation-Reseau.git',
-                demo: 'cisco-tp.pkt'
-            },
-            {
-                name: 'Afiche publicitaire',
-                description: 'Moderne pour un événement culturel, mettant en valeur l\'identité visuelle et les éléments graphiques clés.',
-                image: 'img/crea-PS2.png',
-                technologies: ['photoshop'],
-                github: null,
-                demo: 'img/crea-PS2.png'            
-            },
-            {
-                name: 'Afiche promotionnelle',
-                description: 'Avec effets visuels avancés, retouche photo professionnelle et mise en page dynamique.',
-                image: 'img/crea-PS4.png',
-                technologies: ['photoshop'],
-                github: null,
-                demo: 'img/crea-PS4.png'            
-            },                        
-            {
-                name: 'Affiche vectorielle',
-                description: 'Avec des illustrations personnalisées, typographie créative et composition harmonieuse des éléments.',
-                image: 'img/crea-UI2.png',
-                technologies: ['Illustrator'],
-                github: null,
-                demo: 'img/crea-UI2.png'
-            }         
-               
-                            
+            { name: 'Site Math-Info', nameEn: 'Math-Info Site', description: 'Site web pour le département Mathématique et Informatique', descriptionEn: 'Website for the Mathematics and Computer Science department', image: 'img/site-MI2.png', technologies: ['HTML', 'CSS', 'JavaScript'], github: 'https://github.com/Guy277/guy277.github.io.git', demo: 'https://mi-site.com' },
+            { name: 'Site Resto', nameEn: 'Resto Site', description: 'Site web pour des restaurants', descriptionEn: 'Website for restaurants', image: 'img/resto.png', technologies: ['HTML', 'CSS', 'JavaScript'], github: 'https://github.com/Guy277/Resto-site.git', demo: 'https://guy277.github.io/Resto-site/' },
+            { name: 'Todo List', nameEn: 'Todo List', description: 'Application de gestion de tâches avec interface moderne', descriptionEn: 'Task management app with modern interface', image: 'img/todo.png', technologies: ['HTML', 'CSS', 'JavaScript', 'PHP'], github: 'https://github.com/Guy277/toDo.git', demo: 'https://guy277.github.io/toDo/' },
+            { name: 'App Desktop 1', nameEn: 'Desktop App 1', description: 'Application de gestion de notes etudiants', descriptionEn: 'Student grades management application', image: 'img/home-py.png', technologies: ['Python', 'Tkinter', 'MySQL'], github: 'https://github.com/Guy277/toDo.git', demo: 'https://todo-list.com' },
+            { name: 'App Desktop 2', nameEn: 'Desktop App 2', description: 'Application de gestion des femmes chercheuses de Côte d\'Ivoire', descriptionEn: 'Application for managing women researchers in Côte d\'Ivoire', image: 'img/home2-py.png', technologies: ['Python', 'Tkinter/Custom-Tkinter', 'MySQL'], github: 'https://github.com/Guy277/toDo.git', demo: 'https://todo-list.com' },
+            { name: 'Simulation Reseau', nameEn: 'Network Simulation', description: 'Simulation de reseau avec cisco packet tracer', descriptionEn: 'Network simulation with Cisco Packet Tracer', image: 'img/cisco.PNG', technologies: ['Cisco Packet Tracer'], github: 'https://github.com/Guy277/Simulation-Reseau.git', demo: 'cisco-tp.pkt' },
+            { name: 'Afiche publicitaire', nameEn: 'Advertising poster', description: 'Moderne pour un événement culturel, mettant en valeur l\'identité visuelle et les éléments graphiques clés.', descriptionEn: 'Modern design for a cultural event, highlighting visual identity and key graphic elements.', image: 'img/crea-PS2.png', technologies: ['photoshop'], github: null, demo: 'img/crea-PS2.png' },
+            { name: 'Afiche promotionnelle', nameEn: 'Promotional poster', description: 'Avec effets visuels avancés, retouche photo professionnelle et mise en page dynamique.', descriptionEn: 'With advanced visual effects, professional photo retouching and dynamic layout.', image: 'img/crea-PS4.png', technologies: ['photoshop'], github: null, demo: 'img/crea-PS4.png' },
+            { name: 'Affiche vectorielle', nameEn: 'Vector poster', description: 'Avec des illustrations personnalisées, typographie créative et composition harmonieuse des éléments.', descriptionEn: 'With custom illustrations, creative typography and harmonious composition.', image: 'img/crea-UI2.png', technologies: ['Illustrator'], github: null, demo: 'img/crea-UI2.png' }
         ];
-
-        // Générer les cartes de compétences
-        function generateSkillCards() {
-            const skillsGrid = document.querySelector('.skills-grid');
-            skills.forEach(category => {
-                const categoryCard = document.createElement('div');
-                categoryCard.className = 'skill-category card-hover bg-white p-6 rounded-xl shadow-lg fade-in';
-                categoryCard.innerHTML = `
-                    <div class="flex items-center space-x-4 mb-6">
-                        <i class="${category.icon} text-3xl text-blue-600"></i>
-                        <h3 class="text-2xl font-semibold">${category.name}</h3>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        ${category.subSkills.map(skill => `
-                            <div class="skill-card bg-gray-50 p-4 rounded-lg border border-gray-200">
-                                <div class="flex items-center space-x-2 mb-2">
-                                    <i class="${skill.icon} text-blue-600"></i>
-                                    <h4 class="font-medium">${skill.name}</h4>
-                                </div>
-                                <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
-                                    <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0" data-width="${skill.level}%"></div>
-                                </div>
-                                <span>${skill.level}%</span>
-                                ${skill.projects.length > 0 ? `
-                                    <div class="mt-4 pt-4 border-t border-gray-200">
-                                        <h5 class="font-medium mb-2">Projets réalisés</h5>
-                                        <div class="space-y-4 grid grid-cols-1 gap-4">
-                                            ${skill.projects.map(project => `
-                                                <div class="bg-white p-4 rounded-lg shadow-sm">
-                                                    ${project.image ? `<img src="${project.image}" alt="${project.name}" class="w-full h-32 object-cover rounded-lg mb-2">` : ''}
-                                                    <h6 class="font-semibold">${project.name}</h6>
-                                                    <p class="text-sm text-gray-600">${project.description}</p>
-                                                    <div class="flex space-x-2 mt-2">
-                                                        ${project.github ? `
-                                                            <a href="${project.github}" target="_blank" class="text-blue-600 hover:text-blue-800">
-                                                                <i class="fab fa-github"></i>
-                                                            </a>
-                                                        ` : ''}
-                                                        ${project.demo ? `
-                                                            <a href="${project.demo}" target="_blank" class="text-blue-600 hover:text-blue-800">
-                                                                <i class="fas fa-external-link-alt"></i>
-                                                            </a>
-                                                        ` : ''}
-                                                    </div>
-                                                </div>
-                                            `).join('')}
-                                        </div>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-                skillsGrid.appendChild(categoryCard);
-            });
-        }
 
         // Générer les cartes de projets
         function generateProjectCards() {
             const projectsGrid = document.querySelector('.projects-grid');
+            const t = (key) => (translations[currentLang] && translations[currentLang][key]) || key;
             projects.forEach(project => {
+                const projName = currentLang === 'en' && project.nameEn ? project.nameEn : project.name;
+                const projDesc = currentLang === 'en' && project.descriptionEn ? project.descriptionEn : project.description;
                 const projectCard = document.createElement('div');
                 projectCard.className = 'project-card card-hover bg-white p-6 rounded-xl shadow-lg fade-in';
                 projectCard.innerHTML = `
-                    <img src="${project.image}" alt="${project.name}" class="w-full h-48 object-cover rounded-lg mb-4">
-                    <h3 class="text-xl font-semibold mb-2">${project.name}</h3>
-                    <p class="text-gray-600 mb-4">${project.description}</p>
+                    <img src="${project.image}" alt="${projName}" class="w-full h-48 object-cover rounded-lg mb-4">
+                    <h3 class="text-xl font-semibold mb-2">${projName}</h3>
+                    <p class="text-gray-600 mb-4">${projDesc}</p>
                     <div class="flex flex-wrap gap-2 mb-4">
                         ${project.technologies.map(tech => `<span class="bg-blue-100 text-blue-800 text-sm px-2 py-1 rounded">${tech}</span>`).join('')}
                     </div>
                     <div class="flex space-x-4">
-                        <a href="${project.github}" target="_blank" class="btn bg-gray-200 text-gray-800 px-4 py-2 rounded-full hover:bg-gray-300 transition flex items-center space-x-2">
+                        ${project.github ? `<a href="${project.github}" target="_blank" class="btn bg-gray-200 text-gray-800 px-4 py-2 rounded-full hover:bg-gray-300 transition flex items-center space-x-2">
                             <i class="fab fa-github"></i>
-                            <span>Code</span>
-                        </a>
+                            <span>${t('btn.code')}</span>
+                        </a>` : ''}
                         <a href="${project.demo}" target="_blank" class="btn bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition flex items-center space-x-2">
                             <i class="fas fa-external-link-alt"></i>
-                            <span>Demo</span>
+                            <span>${t('btn.demo')}</span>
                         </a>
                     </div>
                 `;
@@ -658,51 +624,51 @@
         }
 
         function initContactForm() {
-    const contactForm = document.querySelector('.contact-form');
-    contactForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const submitButton = contactForm.querySelector('button[type="submit"]');
-        const originalText = submitButton.innerHTML;
-        
-        // Ajout du spinner
-        submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
-        submitButton.disabled = true;
+            const contactForm = document.querySelector('.contact-form');
+            contactForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const submitButton = contactForm.querySelector('button[type="submit"]');
+                const originalText = submitButton.innerHTML;
+                
+                // Ajout du spinner
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi...';
+                submitButton.disabled = true;
 
-        try {
-            // Envoi réel des données à Formspree
-            const response = await fetch(contactForm.action, {
-                method: 'POST',
-                body: new FormData(contactForm),
-                headers: {
-                    'Accept': 'application/json'
+                try {
+                    // Envoi réel des données à Formspree
+                    const response = await fetch(contactForm.action, {
+                        method: 'POST',
+                        body: new FormData(contactForm),
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    if (!response.ok) throw new Error(response.statusText);
+
+                    contactForm.reset();
+                    
+                    // Message de succès
+                    const successMessage = document.createElement('div');
+                    successMessage.className = 'bg-green-100 text-green-800 p-4 rounded-lg flex items-center space-x-2';
+                    successMessage.innerHTML = '<i class="fas fa-check-circle"></i> Message envoyé avec succès!';
+                    contactForm.insertBefore(successMessage, contactForm.firstChild);
+
+                    setTimeout(() => successMessage.remove(), 3000);
+
+                } catch (error) {
+                    console.error('Error:', error);
+                    const errorMessage = document.createElement('div');
+                    errorMessage.className = 'bg-red-100 text-red-800 p-4 rounded-lg flex items-center space-x-2';
+                    errorMessage.innerHTML = '<i class="fas fa-exclamation-circle"></i> Une erreur est survenue.';
+                    contactForm.insertBefore(errorMessage, contactForm.firstChild);
+                    setTimeout(() => errorMessage.remove(), 3000);
+                } finally {
+                    submitButton.innerHTML = originalText;
+                    submitButton.disabled = false;
                 }
             });
-
-            if (!response.ok) throw new Error(response.statusText);
-
-            contactForm.reset();
-            
-            // Message de succès
-            const successMessage = document.createElement('div');
-            successMessage.className = 'bg-green-100 text-green-800 p-4 rounded-lg flex items-center space-x-2';
-            successMessage.innerHTML = '<i class="fas fa-check-circle"></i> Message envoyé avec succès!';
-            contactForm.insertBefore(successMessage, contactForm.firstChild);
-
-            setTimeout(() => successMessage.remove(), 3000);
-
-        } catch (error) {
-            console.error('Error:', error);
-            const errorMessage = document.createElement('div');
-            errorMessage.className = 'bg-red-100 text-red-800 p-4 rounded-lg flex items-center space-x-2';
-            errorMessage.innerHTML = '<i class="fas fa-exclamation-circle"></i> Une erreur est survenue.';
-            contactForm.insertBefore(errorMessage, contactForm.firstChild);
-            setTimeout(() => errorMessage.remove(), 3000);
-        } finally {
-            submitButton.innerHTML = originalText;
-            submitButton.disabled = false;
         }
-    });
-}
 
         // Animation au scroll
         function initScrollAnimations() {
@@ -713,7 +679,7 @@
                     }
                 });
             }, { threshold: 0.1 });
-            document.querySelectorAll('section, .skill-category, .project-card, .certification-card').forEach(el => observer.observe(el));
+            document.querySelectorAll('section, .skill-card, .project-card, .certification-card').forEach(el => observer.observe(el));
         }
 
         // Animation des barres de progression
@@ -723,23 +689,494 @@
                     if (entry.isIntersecting) {
                         const bar = entry.target;
                         const width = bar.getAttribute('data-width');
-                        bar.style.width = width;
-                    }
-                });
-            }, { threshold: 0.2 });
-            document.querySelectorAll('.progress-bar').forEach(bar => observer.observe(bar));
+                        bar.style.width
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Portfolio de Achille Guy Gle - Cybersécurité & Développement Full Stack">
+    <meta name="keywords" content="développeur full stack, web development, HTML, CSS, JavaScript, PHP, Python">
+    <title>Portfolio</title>
+    <link rel="icon" href="pf4.ico" type="image/x-icon">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <!-- XLSX Library for Excel file handling -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body class="bg-white text-gray-800 transition-colors duration-300">
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 w-full bg-white shadow-lg z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <a href="#" class="text-2xl font-bold text-blue-600">Portfolio</a>
+            <button class="mobile-menu-button sm:hidden text-2xl text-gray-600 hover:text-blue-600" aria-label="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <ul class="nav-links hidden sm:flex space-x-6">
+                <li><a href="#accueil" class="nav-link text-gray-600 hover:text-blue-600 transition" data-lang-key="nav.home">Accueil</a></li>
+                <li><a href="#formation" class="nav-link text-gray-600 hover:text-blue-600 transition" data-lang-key="nav.formation">Formation</a></li>
+                <li><a href="#competences" class="nav-link text-gray-600 hover:text-blue-600 transition" data-lang-key="nav.competences">Compétences</a></li>
+                <li><a href="#associations" class="nav-link text-gray-600 hover:text-blue-600 transition" data-lang-key="nav.associations">Associations</a></li>
+                <li><a href="#projets" class="nav-link text-gray-600 hover:text-blue-600 transition" data-lang-key="nav.projets">Projets</a></li>
+                <li><a href="#contact" class="nav-link text-gray-600 hover:text-blue-600 transition" data-lang-key="nav.contact">Contact</a></li>
+                <li id="nav-lang-en" class="lang-switcher"><a href="#" class="nav-link text-gray-600 hover:text-blue-600 transition" data-lang-switch="en">English</a></li>
+                <li id="nav-lang-fr" class="lang-switcher hidden"><a href="#" class="nav-link text-gray-600 hover:text-blue-600 transition" data-lang-switch="fr">Français</a></li>
+                <li><a href="CV_Stage.pdf" download class="nav-link text-gray-600 hover:text-blue-600 transition flex items-center space-x-1">
+                    <i class="fas fa-file-download"></i>
+                    <span>CV</span>
+                </a></li>
+            </ul>
+            <button class="theme-toggle text-xl text-gray-600 hover:text-blue-600" aria-label="Toggle theme">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section id="accueil" class="min-h-screen flex items-center bg-cover bg-center relative" style="background-image: url('photo_web3.gif');">
+        <div class="absolute inset-0 bg-gradient-to-r from-black/60 to-blue-900/40"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 text-white">
+            <h1 class="text-4xl sm:text-6xl font-bold mb-4 fade-in">Achille Guy Gle</h1>
+            <p class="text-xl sm:text-3xl mb-6 fade-in" data-lang-key="hero.title">Cybersécurité & Développement Full Stack</p>
+            <div class="flex justify-center space-x-4 mb-6">
+                <a href="https://github.com/Guy277" target="_blank" class="text-2xl hover:text-blue-400 transition"><i class="fab fa-github"></i></a>
+                <a href="https://www.linkedin.com/in/gle-guy-achille-674a4b282" target="_blank" class="text-2xl hover:text-blue-400 transition"><i class="fab fa-linkedin"></i></a>
+                <a href="#" target="_blank" class="text-2xl hover:text-blue-400 transition"><i class="fab fa-twitter"></i></a>
+            </div>
+            <div class="space-x-4">
+                <a href="#projets" class="btn inline-block bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition" data-lang-key="hero.projets">Voir mes projets</a>
+                <a href="#contact" class="btn inline-block border-2 border-white text-white px-6 py-3 rounded-full hover:bg-white hover:text-blue-600 transition" data-lang-key="hero.contact">Me contacter</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Formation Section -->
+    <section id="formation" class="py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800" data-lang-key="formation.title">Formation</h2>
+            <div class="relative max-w-3xl mx-auto">
+                <div class="absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-gray-200"></div>
+                <div class="space-y-12">
+                    <div class="education-item relative w-1/2 pr-8 slide-in-left">
+                        <div class="absolute top-0 right-0 w-4 h-4 bg-blue-600 rounded-full border-2 border-white"></div>
+                        <div class="year font-semibold text-blue-600">2025-2026</div>
+                        <div class="card-hover bg-white p-6 rounded-xl shadow-lg">
+                            <h3 class="text-xl font-semibold" data-lang-key="formation.m1">Master 1. CYBERSECURITE ET INTELLIGENCE ARTIFICIELLE </h3>
+                            <p class="text-gray-600" data-lang-key="formation.esatic">Ecole Supérieure Africaine des TIC ( ESATIC )</p>
+                        </div>
+                    </div>
+                    <div class="education-item relative w-1/2 pr-8 slide-in-left">
+                        <div class="absolute top-0 right-0 w-4 h-4 bg-blue-600 rounded-full border-2 border-white"></div>
+                        <div class="year font-semibold text-blue-600">2024-2025</div>
+                        <div class="card-hover bg-white p-6 rounded-xl shadow-lg">
+                            <h3 class="text-xl font-semibold" data-lang-key="formation.l3">Licence 3. Mathématique Et Informatique</h3>
+                            <p class="text-gray-600" data-lang-key="formation.ufhb">Université Félix-Houphouët-Boigny</p>
+                        </div>
+                    </div>
+                    <div class="education-item relative w-1/2 ml-auto pl-8 slide-in-right">
+                        <div class="absolute top-0 left-0 w-4 h-4 bg-blue-600 rounded-full border-2 border-white"></div>
+                        <div class="year font-semibold text-blue-600">2023-2024</div>
+                        <div class="card-hover bg-white p-6 rounded-xl shadow-lg">
+                            <h3 class="text-xl font-semibold" data-lang-key="formation.l2">Licence 2. Mathématique Et Informatique</h3>
+                            <p class="text-gray-600" data-lang-key="formation.ufhb">Université Félix-Houphouët-Boigny</p>
+                        </div>
+                    </div>
+                    <div class="education-item relative w-1/2 pr-8 slide-in-left">
+                        <div class="absolute top-0 right-0 w-4 h-4 bg-blue-600 rounded-full border-2 border-white"></div>
+                        <div class="year font-semibold text-blue-600">2021-2022</div>
+                        <div class="card-hover bg-white p-6 rounded-xl shadow-lg">
+                            <h3 class="text-xl font-semibold" data-lang-key="formation.l1">Licence 1. Mathématique Et Informatique</h3>
+                            <p class="text-gray-600" data-lang-key="formation.ufhb">Université Félix-Houphouët-Boigny</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h2 class="text-4xl font-bold text-center mt-16 mb-12 text-gray-800" data-lang-key="formation.certifications">Certifications</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="certification-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
+                    <i class="fas fa-certificate text-4xl text-blue-600 mb-4"></i>
+                    <h3 class="text-xl font-semibold" data-lang-key="cert.bureautique">Bureautique & Infographie</h3>
+                    <p class="text-gray-600" data-lang-key="cert.ambassade">Ambassade des États-Unis CI & Impact Group</p>
+                </div>
+                <div class="certification-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
+                    <i class="fas fa-robot text-4xl text-blue-600 mb-4"></i>
+                    <h3 class="text-xl font-semibold" data-lang-key="cert.robotique">3D Design, IA & Robotique</h3>
+                    <p class="text-gray-600" data-lang-key="cert.centre">Centre Ivoirien de Robotique</p>
+                </div>
+                <div class="certification-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
+                    <i class="fas fa-mobile-alt text-4xl text-blue-600 mb-4"></i>
+                    <h3 class="text-xl font-semibold" data-lang-key="cert.robot">Robot Mobile Connecté</h3>
+                    <p class="text-gray-600">Orange Digital Center</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Compétences Section -->
+    <section id="competences" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800" data-lang-key="competences.title">Mes Compétences</h2>
+            <div class="skills-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Skill Card: HTML/CSS -->
+                <div class="skill-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
+                    <div class="skill-icon text-5xl mb-4">
+                        <i class="fab fa-html5 text-orange-500"></i>
+                        <i class="fab fa-css3-alt text-blue-500"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">HTML/CSS</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0" data-width="90%"></div>
+                    </div>
+                    <span>90%</span>
+                </div>
+                <!-- Skill Card: JavaScript -->
+                <div class="skill-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
+                    <div class="skill-icon text-5xl mb-4">
+                        <i class="fab fa-js text-yellow-500"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">JavaScript</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0" data-width="75%"></div>
+                    </div>
+                    <span>75%</span>
+                </div>
+                <!-- Skill Card: Python -->
+                <div class="skill-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
+                    <div class="skill-icon text-5xl mb-4">
+                        <i class="fab fa-python text-green-500"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Python</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0" data-width="80%"></div>
+                    </div>
+                    <span>80%</span>
+                </div>
+                <!-- Skill Card: PHP -->
+                <div class="skill-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
+                    <div class="skill-icon text-5xl mb-4">
+                        <i class="fab fa-php text-indigo-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">PHP</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0" data-width="70%"></div>
+                    </div>
+                    <span>70%</span>
+                </div>
+                <!-- Skill Card: Cybersecurity -->
+                <div class="skill-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
+                    <div class="skill-icon text-5xl mb-4">
+                        <i class="fas fa-shield-alt text-green-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2" data-lang-key="skills.cybersecurity">Cybersécurité</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0" data-width="65%"></div>
+                    </div>
+                    <span>65%</span>
+                </div>
+                <!-- Skill Card: Git/GitHub -->
+                <div class="skill-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
+                    <div class="skill-icon text-5xl mb-4">
+                        <i class="fab fa-git-alt text-red-600"></i>
+                        <i class="fab fa-github text-gray-800"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Git/GitHub</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0" data-width="85%"></div>
+                    </div>
+                    <span>85%</span>
+                </div>
+                <!-- Skill Card: Linux -->
+                <div class="skill-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
+                    <div class="skill-icon text-5xl mb-4">
+                        <i class="fab fa-linux text-yellow-600"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Linux</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0" data-width="70%"></div>
+                    </div>
+                    <span>70%</span>
+                </div>
+                <!-- Skill Card: MySQL/Database -->
+                <div class="skill-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
+                    <div class="skill-icon text-5xl mb-4">
+                        <i class="fas fa-database text-blue-700"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">MySQL</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0" data-width="75%"></div>
+                    </div>
+                    <span>75%</span>
+                </div>
+                <!-- Skill Card: UI/UX Design -->
+                <div class="skill-card card-hover bg-white p-6 rounded-xl shadow-lg text-center fade-in">
+                    <div class="skill-icon text-5xl mb-4">
+                        <i class="fas fa-paint-brush text-pink-500"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">UI/UX Design</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0" data-width="65%"></div>
+                    </div>
+                    <span>65%</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Langues Section -->
+    <section id="langues" class="py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800" data-lang-key="langues.title">Langues</h2>
+            <div class="languages-grid grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-lg mx-auto">
+                <div class="language-card card-hover bg-white p-6 rounded-xl shadow-lg text-center">
+                    <h3 class="text-xl font-semibold mb-2" data-lang-key="langues.francais">Français</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0" data-width="85%"></div>
+                    </div>
+                    <span>85%</span>
+                </div>
+                <div class="language-card card-hover bg-white p-6 rounded-xl shadow-lg text-center">
+                    <h3 class="text-xl font-semibold mb-2" data-lang-key="langues.anglais">Anglais</h3>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mb-2">
+                        <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 0" data-width="60%"></div>
+                    </div>
+                    <span>60%</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Engagements Associatifs Section -->
+    <section id="associations" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800" data-lang-key="associations.title">Engagements Associatifs</h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                <div class="association-card card-hover bg-white p-6 rounded-xl shadow-lg text-center">
+                    <img src="img/Logo-Scout.jpg" alt="Logo ASCCI" class="w-32 h-32 object-contain mx-auto mb-4 rounded-full">
+                    <h3 class="text-xl font-semibold mb-2">ASCCI</h3>
+                    <p class="text-gray-600 mb-4" data-lang-key="associations.ascci">Association des Scouts Catholiques de Côte d'Ivoire</p>
+                    <div class="flex justify-center space-x-4">
+                        <a href="#" target="_blank" class="text-blue-600 hover:text-blue-800 transition">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                        <a href="#" target="_blank" class="text-blue-600 hover:text-blue-800 transition">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="association-card card-hover bg-white p-6 rounded-xl shadow-lg text-center">
+                    <img src="img/Logo-code-mi.jpg" alt="Logo CODE-MI" class="w-32 h-32 object-contain mx-auto mb-4 rounded-full">
+                    <h3 class="text-xl font-semibold mb-2">CODE-MI</h3>
+                    <p class="text-gray-600 mb-4" data-lang-key="associations.codemi">Collège des Délégués de l'UFR-MI de l'Université Félix Houphouët-Boigny</p>
+                    <div class="flex justify-center space-x-4">
+                        <a href="#" target="_blank" class="text-blue-600 hover:text-blue-800 transition">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                        <a href="#" target="_blank" class="text-blue-600 hover:text-blue-800 transition">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="association-card card-hover bg-white p-6 rounded-xl shadow-lg text-center">
+                    <img src="img/C2E-logo.jpg" alt="Logo C2E" class="w-32 h-32 object-contain mx-auto mb-4 rounded-full">
+                    <h3 class="text-xl font-semibold mb-2">C2E</h3>
+                    <p class="text-gray-600 mb-4" data-lang-key="associations.c2e">Conseil Estudiantin de l'ESATIC</p>
+                    <div class="flex justify-center space-x-4">
+                        <a href="https://www.facebook.com/groups/c2e.esatic" target="_blank" class="text-blue-600 hover:text-blue-800 transition">
+                            <i class="fab fa-facebook"></i>
+                        </a>
+                        <a href="#" target="_blank" class="text-blue-600 hover:text-blue-800 transition">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projets Section -->
+    <section id="projets" class="py-20 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl font-bold text-center mb-12 text-gray-800" data-lang-key="projets.title">Mes Projets</h2>
+            <div class="projects-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="py-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h2 class="text-4xl font-bold text-center mb-10 text-gray-800" data-lang-key="contact.title">Contact</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <form class="contact-form flex flex-wrap gap-4" method="POST" action="https://formspree.io/f/xgvkrvly">
+                    <div class="flex flex-wrap gap-4 w-full">
+                        <div class="form-group flex-1 min-w-[200px]">
+                            <label for="name" class="block font-medium mb-1 text-gray-700" data-lang-key="contact.nom">Nom</label>
+                            <input type="text" id="name" name="name" required class="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
+                        </div>
+                        <div class="form-group flex-1 min-w-[200px]">
+                            <label for="email" class="block font-medium mb-1 text-gray-700">Email</label>
+                            <input type="email" id="email" name="email" required class="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
+                        </div>
+                        <div class="form-group flex-1 min-w-[200px]">
+                            <label for="subject" class="block font-medium mb-1 text-gray-700" data-lang-key="contact.sujet">Sujet</label>
+                            <input type="text" id="subject" name="subject" required class="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600">
+                        </div>
+                    </div>
+                    <div class="form-group w-full">
+                        <label for="message" class="block font-medium mb-1 text-gray-700" data-lang-key="contact.message">Message</label>
+                        <textarea id="message" name="message" required class="w-full p-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-600 min-h-[100px] resize-y"></textarea>
+                    </div>
+                    <button type="submit" class="btn bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition flex items-center space-x-2">
+                        <span data-lang-key="contact.envoyer">Envoyer</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 py-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col items-center space-y-6">
+                <div class="text-center">
+                    <h3 class="text-xl font-semibold text-blue-600 mb-4" data-lang-key="contact.title">Contact</h3>
+                    <p class="text-gray-600">Email: achille.gle2025@esatic.edu.ci</p>
+                    <p class="text-gray-600" data-lang-key="footer.telephone">Téléphone: +225 05 55 16 16 29 / +225 07 03 35 46 88</p>
+                </div>
+                <a href="CV_Stage.pdf" class="btn bg-gray-200 text-gray-800 px-6 py-3 rounded-full hover:bg-gray-300 transition flex items-center space-x-2" download>
+                    <i class="fas fa-download"></i>
+                    <span data-lang-key="footer.download_cv">Télécharger mon CV</span>
+                </a>
+                <div class="flex space-x-4">
+                    <a href="https://github.com/Guy277" target="_blank" class="text-2xl hover:text-blue-600 transition"><i class="fab fa-github"></i></a>
+                    <a href="https://www.linkedin.com/in/gle-guy-achille-674a4b282" target="_blank" class="text-2xl hover:text-blue-600 transition"><i class="fab fa-linkedin"></i></a>
+                    <a href="#" target="_blank" class="text-2xl hover:text-blue-600 transition"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+            <div class="mt-8 pt-8 border-t border-gray-200 text-center text-gray-600">
+                <p data-lang-key="footer.copyright">© 2025 Achille Guy Gle. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Variables globales pour la gestion des fichiers Excel
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+
+        function filledCell(cell) {
+            return cell !== '' && cell != null;
         }
 
-        // Initialisation
-        document.addEventListener('DOMContentLoaded', () => {
-            generateSkillCards();
-            generateProjectCards();
-            initThemeToggle();
-            initMobileMenu();
-            initContactForm();
-            initScrollAnimations();
-            initProgressBars();
-        });
-    </script>
-</body>
-</html>
+        function loadFileData(filename) {
+            if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+                try {
+                    var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                    var firstSheetName = workbook.SheetNames[0];
+                    var worksheet = workbook.Sheets[firstSheetName];
+
+                    // Convert sheet to JSON to filter blank rows
+                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                    // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                    var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                    // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                    var headerRowIndex = filteredData.findIndex((row, index) =>
+                      row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                    );
+                    // Fallback
+                    if (headerRowIndex === -1 || headerRowIndex > 25) {
+                      headerRowIndex = 0;
+                    }
+
+                    // Convert filtered JSON back to CSV
+                    var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                    csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                    return csv;
+                } catch (e) {
+                    console.error(e);
+                    return "";
+                }
+            }
+            return gk_fileData[filename] || "";
+        }
+
+        // Langue : fr par défaut, persistance dans localStorage
+        let currentLang = localStorage.getItem('portfolio-lang') || 'fr';
+
+        const translations = {
+            fr: {
+                'nav.home': 'Accueil',
+                'nav.formation': 'Formation',
+                'nav.competences': 'Compétences',
+                'nav.associations': 'Associations',
+                'nav.projets': 'Projets',
+                'nav.contact': 'Contact',
+                'hero.title': 'Cybersécurité & Développement Full Stack',
+                'hero.projets': 'Voir mes projets',
+                'hero.contact': 'Me contacter',
+                'formation.title': 'Formation',
+                'formation.m1': 'Master 1. CYBERSECURITE ET INTELLIGENCE ARTIFICIELLE',
+                'formation.esatic': 'Ecole Supérieure Africaine des TIC ( ESATIC )',
+                'formation.l3': 'Licence 3. Mathématique Et Informatique',
+                'formation.l2': 'Licence 2. Mathématique Et Informatique',
+                'formation.l1': 'Licence 1. Mathématique Et Informatique',
+                'formation.ufhb': 'Université Félix-Houphouët-Boigny',
+                'formation.certifications': 'Certifications',
+                'cert.bureautique': 'Bureautique & Infographie',
+                'cert.ambassade': 'Ambassade des États-Unis CI & Impact Group',
+                'cert.robotique': '3D Design, IA & Robotique',
+                'cert.centre': 'Centre Ivoirien de Robotique',
+                'cert.robot': 'Robot Mobile Connecté',
+                'competences.title': 'Mes Compétences',
+                'langues.title': 'Langues',
+                'langues.francais': 'Français',
+                'langues.anglais': 'Anglais',
+                'associations.title': 'Engagements Associatifs',
+                'associations.ascci': 'Association des Scouts Catholiques de Côte d\'Ivoire',
+                'associations.codemi': 'Collège des Délégués de l\'UFR-MI de l\'Université Félix Houphouët-Boigny',
+                'associations.c2e': 'Conseil Estudiantin de l\'ESATIC',
+                'projets.title': 'Mes Projets',
+                'contact.title': 'Contact',
+                'contact.nom': 'Nom',
+                'contact.sujet': 'Sujet',
+                'contact.message': 'Message',
+                'contact.envoyer': 'Envoyer',
+                'footer.telephone': 'Téléphone: +225 05 55 16 16 29 / +225 07 03 35 46 88',
+                'footer.download_cv': 'Télécharger mon CV',
+                'footer.copyright': '© 2025 Achille Guy Gle. Tous droits réservés.',
+                'skills.projects_done': 'Projets réalisés',
+                'btn.code': 'Code',
+                'btn.demo': 'Demo'
+            },
+            en: {
+                'nav.home': 'Home',
+                'nav.formation': 'Education',
+                'nav.competences': 'Skills',
+                'nav.associations': 'Associations',
+                'nav.projets': 'Projects',
+                'nav.contact': 'Contact',
+                'hero.title': 'Cybersecurity & Full Stack Development',
+                'hero.projets': 'View my projects',
+                'hero.contact': 'Contact me',
+                'formation.title': 'Education',
+                'formation.m1': 'Master 1. Cybersecurity and Artificial Intelligence',
+                'formation.esatic': 'African School of ICT (ESATIC)',
+                'formation.l3': 'Bachelor 3. Mathematics and Computer Science',
+                'formation.l2': 'Bachelor 2. Mathematics and Computer Science',
+                'formation.l1': 'Bachelor 1. Mathematics and Computer Science',
+                'formation.ufhb': 'Félix Houphouët-Boigny University',
+                'formation.certifications': 'Certifications',
+                'cert.bureautique': 'Office & Graphic Design',
+                'cert.ambassade': 'US Embassy CI & Impact Group',
+                'cert.robotique': '3D Design, AI & Robotics',
+                'cert.centre': 'Ivorian Robotics Center',
+                'cert.robot': 'Connected Mobile Robot',
+                'competences.title': 'My Skills',
+                'langues.title': 'Languages',
+                'langues.francais': 'French',
